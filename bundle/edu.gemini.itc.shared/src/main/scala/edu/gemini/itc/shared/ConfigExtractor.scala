@@ -1,7 +1,6 @@
 package edu.gemini.itc.shared
 
 import java.time.Instant
-
 import edu.gemini.pot.ModelConverters._
 import edu.gemini.pot.sp.SPComponentType._
 import edu.gemini.spModel.config2.{Config, ItemKey}
@@ -24,6 +23,7 @@ import edu.gemini.spModel.target.env.{Asterism, GuideProbeTargets, TargetEnviron
 import edu.gemini.spModel.telescope.IssPort
 import edu.gemini.spModel.core.WavelengthConversions._
 import edu.gemini.shared.util.immutable.{Option => GOption}
+import edu.gemini.spModel.gemini.ghost.{GhostType, InstGhost}
 
 import scala.reflect.ClassTag
 import scalaz.Scalaz._
@@ -105,10 +105,7 @@ object ConfigExtractor {
     } yield Flamingos2Parameters(filter, grism, mask, customSlit, readMode)
   }
 
-  // TODO-GHOSTITC
-  private def extractGhost(c: Config): String \/ GhostParameters = {
-    GhostParameters().right[String]
-  }
+
 //    for {
 //      _ <- Some(Unit)
 //    } yield {
@@ -140,6 +137,63 @@ object ConfigExtractor {
       altair      <- extractAltair             (targetEnv, probe, when, c)
       wavelen     <- extractObservingWavelength(c)
     } yield GnirsParameters(pixelScale, filter, grating, readMode, xDisp, wavelen, slitWidth, camera, wellDepth, altair)
+  }
+
+  /*
+  // TODO-GHOSTITC
+  private def extractGhost(c: Config): String \/ GhostParameters = {
+    // Gets the optional custom slit width
+    for {
+      gain        <- extract[GhostType.AmpGain]       (c, AmpGainKey)
+      readMode    <- extract[GhostType.ReadMode]   (c, ReadModeKey)
+      specBin     <- extract[GhostType.Binning]       (c, CcdXBinKey)
+      spatBin     <- extract[GhostType.Binning]       (c, CcdYBinKey)
+      wavelen     <- extractObservingWavelength(c)
+    } yield {
+      GhostParameters(wavelen, gain, readMode, spatBin.getValue, specBin.getValue);
+    }
+  }
+
+  */
+
+  private def extractGhost(c: Config): String \/ GhostParameters = {
+    import GhostType._
+
+    // Gets the site this GMOS belongs to
+    def extractSite: String \/ Site =
+      extract[String](c, InstrumentKey).map(s => if (s.equals(InstGhost.INSTRUMENT_NAME_PROP)) Site.GN else Site.GS)
+
+    // Gets the custom mask for the given site
+    def customMask(s: Site): FPUnit = s match {
+      case Site.GN => GhostType.FPUnit.CUSTOM_MASK
+      case Site.GS => GhostType.FPUnit.CUSTOM_MASK
+    }
+
+    // Gets the mask, supplying the appropriate custom mask for the site if empty
+    def extractMask(s: Site): String \/ FPUnit =
+      if (c.containsItem(FpuKey)) extract[FPUnit](c, FpuKey) else customMask(s).right
+
+    // Gets the optional custom slit width
+    def extractCustomSlit: String \/ Option[CustomSlitWidth] =
+      if (c.containsItem(FpuKey)) None.right else extract[CustomSlitWidth](c, CustomSlitWidthKey).map(Some(_))
+
+    for {
+      site        <- extractSite
+      mask        <- extractMask(site)
+      customSlit  <- extractCustomSlit
+      filter      <- extract[Filter]        (c, FilterKey)
+      grating     <- extract[Disperser]     (c, DisperserKey)
+      gain        <- extract[AmpGain]       (c, AmpGainKey)
+      readMode    <- extract[AmpReadMode]   (c, AmpReadModeKey)
+      specBin     <- extract[Binning]       (c, CcdXBinKey)
+      spatBin     <- extract[Binning]       (c, CcdYBinKey)
+      ccdType     <- extract[DetectorManufacturer](c, CcdManufacturerKey)
+      builtinROI  <- extract[BuiltinROI]    (c, BuiltinROIKey)
+      wavelen     <- extractObservingWavelength(c)
+    } yield {
+      GhostParameters(filter, grating, wavelen, mask, gain, readMode, customSlit, spatBin.getValue, specBin.getValue, ccdType, builtinROI, site)
+    }
+
   }
 
   private def extractGmos(c: Config): String \/ GmosParameters = {

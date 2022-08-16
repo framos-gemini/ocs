@@ -2,7 +2,9 @@ package edu.gemini.itc.operation;
 
 import edu.gemini.itc.base.*;
 import edu.gemini.itc.gmos.CCDGapCalc;
+import edu.gemini.itc.shared.GhostParameters;
 import edu.gemini.itc.shared.GmosParameters;
+import edu.gemini.spModel.gemini.ghost.GhostType;
 import edu.gemini.spModel.gemini.gmos.GmosCommonType;
 
 import java.util.ArrayList;
@@ -23,6 +25,8 @@ public class DetectorsTransmissionVisitor implements SampledSpectrumVisitor {
     private VisitableSampledSpectrum detectorsTransmissionValues;
     private List<Integer> detectorCcdIndexes;
     private final GmosCommonType.DetectorManufacturer ccdType;
+
+    private final GhostType.DetectorManufacturer ccdType2; // Bad implementation, but this is performing to testing
     private final int gapSizePix;
 
     public DetectorsTransmissionVisitor(final GmosParameters p, final double nmppx, final String filename) {
@@ -32,6 +36,40 @@ public class DetectorsTransmissionVisitor implements SampledSpectrumVisitor {
         this.rulingDensity      = p.grating().rulingDensity();
         final double[][] data   = DatFile.arrays().apply(filename);
         this.ccdType = p.ccdType();
+        this.ccdType2 = null;
+
+        switch (p.ccdType()) {
+            case E2V:
+                this.gapSizePix = 37;
+                break;
+            case HAMAMATSU:
+                switch (p.site()) {
+                    case GN:
+                        this.gapSizePix = 67;
+                        break;
+                    case GS:
+                        this.gapSizePix = 61;
+                        break;
+                    default:
+                        throw new Error("invalid site");
+                }
+                break;
+            default:
+                throw new Error("invalid ccd type");
+        }
+
+        initialize(data);
+    }
+
+    public DetectorsTransmissionVisitor(final GhostParameters p, final double nmppx, final String filename) {
+        this.spectralBinning    = p.spectralBinning();
+        this.centralWavelength  = p.centralWavelength().toNanometers();
+        this.nmppx              = nmppx;
+        this.rulingDensity      = p.grating().rulingDensity();
+        final double[][] data   = DatFile.arrays().apply(filename);
+        this.ccdType2 = p.ccdType();
+
+        this.ccdType = null;
 
         switch (p.ccdType()) {
             case E2V:
@@ -155,6 +193,10 @@ public class DetectorsTransmissionVisitor implements SampledSpectrumVisitor {
         return 0.5 * nmppx * CCDGapCalc.calcIfu2Shift(centralWavelength, rulingDensity, ccdType) / spectralBinning;
     }
 
+    public double ifu2shift2() {
+        return 0.5 * nmppx * CCDGapCalc.calcIfu2Shift(centralWavelength, rulingDensity, ccdType2) / spectralBinning;
+    }
+
     /** The start of the "red" area in wavelength space. */
     public double ifu2RedStart() {
         return centralWavelength - (nmppx * (fullArrayPix() / 2)) - ifu2shift();    // in nm
@@ -174,6 +216,28 @@ public class DetectorsTransmissionVisitor implements SampledSpectrumVisitor {
     public double ifu2BlueEnd() {
         return centralWavelength + (nmppx * (fullArrayPix() / 2)) + ifu2shift();    // in nm
     }
+
+    // Other solution. It is only for test. I think that this won't be necessary ########
+    /** The start of the "red" area in wavelength space. */
+    public double ifu2RedStart2() {
+        return centralWavelength - (nmppx * (fullArrayPix() / 2)) - ifu2shift2();    // in nm
+    }
+
+    /** The end of the "red" area in wavelength space. */
+    public double ifu2RedEnd2() {
+        return centralWavelength + (nmppx * (fullArrayPix() / 2)) - ifu2shift2();    // in nm
+    }
+
+    /** The start of the "blue" area in wavelength space. */
+    public double ifu2BlueStart2() {
+        return centralWavelength - (nmppx * (fullArrayPix() / 2)) + ifu2shift2();    // in nm
+    }
+
+    /** The end of the "blue" area in wavelength space. */
+    public double ifu2BlueEnd2() {
+        return centralWavelength + (nmppx * (fullArrayPix() / 2)) + ifu2shift2();    // in nm
+    }
+    // Remove #############
 
     /** Transforms the given nm value from wavelength space to pixel space, considering specified wvl. shift. */
     private double toPixelSpace(double data, double shift) {

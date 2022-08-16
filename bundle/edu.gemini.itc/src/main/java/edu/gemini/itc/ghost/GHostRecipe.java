@@ -1,4 +1,4 @@
-package edu.gemini.itc.gmos;
+package edu.gemini.itc.ghost;
 
 import edu.gemini.itc.base.GaussianMorphology;
 import edu.gemini.itc.base.ImagingArrayRecipe;
@@ -24,27 +24,7 @@ import edu.gemini.itc.operation.SourceFraction;
 import edu.gemini.itc.operation.SourceFractionFactory;
 import edu.gemini.itc.operation.SpecS2N;
 import edu.gemini.itc.operation.SpecS2NSlitVisitor;
-import edu.gemini.itc.shared.BackgroundData;
-import edu.gemini.itc.shared.ChartAxis;
-import edu.gemini.itc.shared.ChartAxisRange;
-import edu.gemini.itc.shared.FinalS2NData;
-import edu.gemini.itc.shared.GmosParameters;
-import edu.gemini.itc.shared.ITCChart;
-import edu.gemini.itc.shared.IfuSum;
-import edu.gemini.itc.shared.ItcImagingResult;
-import edu.gemini.itc.shared.ItcParameters;
-import edu.gemini.itc.shared.ItcSpectroscopyResult;
-import edu.gemini.itc.shared.ObservationDetails;
-import edu.gemini.itc.shared.ObservingConditions;
-import edu.gemini.itc.shared.S2NChart;
-import edu.gemini.itc.shared.SignalChart;
-import edu.gemini.itc.shared.SignalData;
-import edu.gemini.itc.shared.SignalPixelChart;
-import edu.gemini.itc.shared.SingleS2NData;
-import edu.gemini.itc.shared.SourceDefinition;
-import edu.gemini.itc.shared.SpcChartData;
-import edu.gemini.itc.shared.SpcSeriesData;
-import edu.gemini.itc.shared.TelescopeDetails;
+import edu.gemini.itc.shared.*;
 import scala.Option;
 import scala.Some;
 import scala.collection.JavaConversions;
@@ -56,26 +36,26 @@ import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 /**
- * This class performs the calculations for Gmos used for imaging.
+ * This class performs the calculations for Ghost used for imaging.
  */
-public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRecipe {
+public final class GHostRecipe implements ImagingArrayRecipe, SpectroscopyArrayRecipe {
 
-    private static final Logger Log = Logger.getLogger(GmosRecipe.class.getName());
+    private static final Logger Log = Logger.getLogger(GHostRecipe.class.getName());
     private final ItcParameters p;
-    private final Gmos mainInstrument;
+    private final Ghost mainInstrument;
     private final SourceDefinition _sdParameters;
     private final ObservationDetails _obsDetailParameters;
     private final ObservingConditions _obsConditionParameters;
     private final TelescopeDetails _telescope;
 
     /**
-     * Constructs a GmosRecipe given the parameters. Useful for testing.
+     * Constructs a GhostRecipe given the parameters. Useful for testing.
      */
-    public GmosRecipe(final ItcParameters p, final GmosParameters instr)
+    public GHostRecipe(final ItcParameters p, final GhostParameters instr)
 
     {
         this.p                  = p;
-        mainInstrument          = createGmos(instr, p.observation());
+        mainInstrument          = createGhost(instr, p.observation());
         _sdParameters           = p.source();
         _obsDetailParameters    = p.observation();
         _obsConditionParameters = p.conditions();
@@ -100,7 +80,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
             if (!headless) charts.add(createSignalChart(r, i));
             charts.add(createS2NChart(r, i));
             // IFU-2 case has an additional chart with signal in pixel space
-            if ((!headless) && ((Gmos) r[0].instrument()).isIfu2()) {
+            if ((!headless) && ((Ghost) r[0].instrument()).isIfu2()) {
                 charts.add(createSignalPixelChart(r, i));
             }
             groups.add(charts);
@@ -109,34 +89,31 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
     }
 
     public SpectroscopyResult[] calculateSpectroscopy() {
-        final Gmos[] ccdArray = mainInstrument.getDetectorCcdInstruments();
+        final Ghost[] ccdArray = mainInstrument.getDetectorCcdInstruments();
         final SpectroscopyResult[] results = new SpectroscopyResult[ccdArray.length];
         for (int i = 0; i < ccdArray.length; i++) {
-            final Gmos instrument = ccdArray[i];
+            final Ghost instrument = ccdArray[i];
             results[i] = calculateSpectroscopy(mainInstrument, instrument, ccdArray.length);
         }
         return results;
     }
 
     public ImagingResult[] calculateImaging() {
-        final Gmos[] ccdArray = mainInstrument.getDetectorCcdInstruments();
+        final Ghost[] ccdArray = mainInstrument.getDetectorCcdInstruments();
         final List<ImagingResult> results = new ArrayList<>();
-        for (final Gmos instrument : ccdArray) {
+        for (final Ghost instrument : ccdArray) {
             results.add(calculateImagingDo(instrument));
         }
         return results.toArray(new ImagingResult[results.size()]);
     }
 
-    private Gmos createGmos(final GmosParameters parameters, final ObservationDetails observationDetails) {
-        switch (parameters.site()) {
-            case GN: return new GmosNorth(parameters, observationDetails, 0);
-            case GS: return new GmosSouth(parameters, observationDetails, 0);
-            default: throw new Error("invalid site");
-        }
+    private Ghost createGhost(final GhostParameters parameters, final ObservationDetails observationDetails) {
+        return new Ghost(parameters, observationDetails, 0);
+
     }
 
     // TODO: bring mainInstrument and instrument together
-    private SpectroscopyResult calculateSpectroscopy(final Gmos mainInstrument, final Gmos instrument, final int detectorCount) {
+    private SpectroscopyResult calculateSpectroscopy(final Ghost mainInstrument, final Ghost instrument, final int detectorCount) {
 
         SpecS2NSlitVisitor specS2N;
         final SpecS2N[] specS2Narr;
@@ -220,7 +197,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
             double shift = 0;
 
             for (int i = 0; i < ifusToShow; i++) {
-                GmosSpecS2N s2n = new GmosSpecS2N(numberOfSlits);
+                GhostSpecS2N s2n = new GhostSpecS2N(numberOfSlits);
 
                 double spsf;
                 double onepixsf;
@@ -238,9 +215,9 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
                 for (int j = 0; j < numberOfSlits; j++) {
                     if (instrument.isIfu2()) {
                         if (j == 0) {
-                            shift = tv.ifu2shift(); // blue slit
+                            shift = tv.ifu2shift2(); // blue slit
                         } else {
-                            shift = -tv.ifu2shift(); // red slit
+                            shift = -tv.ifu2shift2(); // red slit
                         }
                     }
 
@@ -281,7 +258,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
 
             final Slit slit = Slit$.MODULE$.apply(_sdParameters, _obsDetailParameters, instrument, instrument.getSlitWidth(), IQcalc.getImageQuality());
             final SlitThroughput throughput = new SlitThroughput(_sdParameters, slit, IQcalc.getImageQuality());
-            GmosSpecS2N s2n = new GmosSpecS2N(numberOfSlits);
+            GhostSpecS2N s2n = new GhostSpecS2N(numberOfSlits);
 
             specS2Narr = new SpecS2N[1];
             specS2N = new SpecS2NSlitVisitor(
@@ -320,7 +297,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
 
     // SpecS2N implementation to hold results for IFU mode calculations.
     // It contains a set of values per each slit.
-    class GmosSpecS2N implements SpecS2N {
+    class GhostSpecS2N implements SpecS2N {
 
         private final VisitableSampledSpectrum[] signal;
         private final VisitableSampledSpectrum[] background;
@@ -328,7 +305,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
         private final VisitableSampledSpectrum[] fins2n;
         private final int numberOfSlits;
 
-        public GmosSpecS2N(int numberOfSlits) {
+        public GhostSpecS2N(int numberOfSlits) {
             this.numberOfSlits = numberOfSlits;
             signal = new VisitableSampledSpectrum[numberOfSlits];
             background = new VisitableSampledSpectrum[numberOfSlits];
@@ -419,7 +396,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
 
 
 
-    private ImagingResult calculateImagingDo(final Gmos instrument) {
+    private ImagingResult calculateImagingDo(final Ghost instrument) {
 
         // Start of morphology section of ITC
 
@@ -462,8 +439,8 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
 
     /** Creates the signal in wavelength space chart. */
     private static SpcChartData createSignalChart(final SpectroscopyResult[] results, final int i) {
-        final Gmos mainInstrument = (Gmos) results[0].instrument(); // This must be GMOS here.
-        final Gmos[] ccdArray     = mainInstrument.getDetectorCcdInstruments();
+        final Ghost mainInstrument = (Ghost) results[0].instrument(); // This must be GMOS here.
+        final Ghost[] ccdArray     = mainInstrument.getDetectorCcdInstruments();
         final DetectorsTransmissionVisitor tv = mainInstrument.getDetectorTransmision();
 
         final boolean ifuUsed = mainInstrument.isIfuUsed();
@@ -480,13 +457,13 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
 
         final List<SpcSeriesData> data = new ArrayList<>();
 
-        for (final Gmos instrument : ccdArray) {
+        for (final Ghost instrument : ccdArray) {
             final String ccdName = results.length > 1 ? instrument.getDetectorCcdName() : "";
             final int ccdIndex   = instrument.getDetectorCcdIndex();
             final int first      = tv.getDetectorCcdStartIndex(ccdIndex);
             final int last       = tv.getDetectorCcdEndIndex(ccdIndex, ccdArray.length);
             final SpectroscopyResult result = results[ccdIndex];
-            data.addAll(sigChartSeries(mainInstrument, ccdIndex, (GmosSpecS2N)result.specS2N()[i], first, last, tv, ccdName));
+            data.addAll(sigChartSeries(mainInstrument, ccdIndex, (GhostSpecS2N)result.specS2N()[i], first, last, tv, ccdName));
         }
 
         final scala.collection.immutable.List<SpcSeriesData> scalaData = JavaConversions.asScalaBuffer(data).toList();
@@ -496,8 +473,8 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
 
     /** Creates the signal to noise in wavelength space chart. */
     private static SpcChartData createS2NChart(final SpectroscopyResult[] results, final int i) {
-        final Gmos mainInstrument  = (Gmos) results[0].instrument(); // This must be GMOS here.
-        final Gmos[] ccdArray      = mainInstrument.getDetectorCcdInstruments();
+        final Ghost mainInstrument  = (Ghost) results[0].instrument(); // This must be GMOS here.
+        final Ghost[] ccdArray      = mainInstrument.getDetectorCcdInstruments();
         final DetectorsTransmissionVisitor tv = mainInstrument.getDetectorTransmision();
 
         final boolean ifuUsed   = mainInstrument.isIfuUsed();
@@ -515,13 +492,13 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
 
         final List<SpcSeriesData> data = new ArrayList<>();
 
-        for (final Gmos instrument : ccdArray) {
+        for (final Ghost instrument : ccdArray) {
             final String ccdName = results.length > 1 ? instrument.getDetectorCcdName() : "";
             final int ccdIndex   = instrument.getDetectorCcdIndex();
             final int first      = tv.getDetectorCcdStartIndex(ccdIndex);
             final int last       = tv.getDetectorCcdEndIndex(ccdIndex, ccdArray.length);
             final SpectroscopyResult result = results[ccdIndex];
-            data.addAll(s2nChartSeries(mainInstrument, ccdIndex, (GmosSpecS2N)result.specS2N()[i], first, last, tv, ccdName));
+            data.addAll(s2nChartSeries(mainInstrument, ccdIndex, (GhostSpecS2N)result.specS2N()[i], first, last, tv, ccdName));
         }
 
         final scala.collection.immutable.List<SpcSeriesData> scalaData = JavaConversions.asScalaBuffer(data).toList();
@@ -531,8 +508,8 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
 
     /** Creates the IFU signal in pixel-space chart. */
     private static SpcChartData createSignalPixelChart(final SpectroscopyResult[] results, final int i) {
-        final Gmos mainInstrument = (Gmos) results[0].instrument(); // This must be GMOS here.
-        final Gmos[] ccdArray     = mainInstrument.getDetectorCcdInstruments();
+        final Ghost mainInstrument = (Ghost) results[0].instrument(); // This must be GMOS here.
+        final Ghost[] ccdArray     = mainInstrument.getDetectorCcdInstruments();
         final DetectorsTransmissionVisitor tv = mainInstrument.getDetectorTransmision();
 
         final double ifuOffset = mainInstrument.getIfuMethod().get() instanceof IfuSum ? 0.0 : mainInstrument.getIFU().getApertureOffsetList().get(i);
@@ -542,18 +519,18 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
         final ChartAxis xAxis = new ChartAxis("Pixels", true, new Some<>(new ChartAxisRange(0, tv.fullArrayPix())));
         final ChartAxis yAxis = ChartAxis.apply("e- per exposure per spectral pixel");
 
-        axes.add(new ChartAxis("Wavelength (nm) (Red slit)",  false, new Some<>(new ChartAxisRange(tv.ifu2RedStart(),  tv.ifu2RedEnd()))));
-        axes.add(new ChartAxis("Wavelength (nm) (Blue slit)", false, new Some<>(new ChartAxisRange(tv.ifu2BlueStart(), tv.ifu2BlueEnd()))));
+        axes.add(new ChartAxis("Wavelength (nm) (Red slit)",  false, new Some<>(new ChartAxisRange(tv.ifu2RedStart2(),  tv.ifu2RedEnd2()))));
+        axes.add(new ChartAxis("Wavelength (nm) (Blue slit)", false, new Some<>(new ChartAxisRange(tv.ifu2BlueStart2(), tv.ifu2BlueEnd2()))));
 
         final List<SpcSeriesData> data = new ArrayList<>();
 
-        for (final Gmos instrument : ccdArray) {
+        for (final Ghost instrument : ccdArray) {
             final String ccdName = results.length > 1 ? " " + instrument.getDetectorCcdName() : "";
             final int ccdIndex   = instrument.getDetectorCcdIndex();
             final int first      = tv.getDetectorCcdStartIndex(ccdIndex);
             final int last       = tv.getDetectorCcdEndIndex(ccdIndex, ccdArray.length);
             final SpectroscopyResult result = results[ccdIndex];
-            data.addAll(signalPixelChartSeries((GmosSpecS2N)result.specS2N()[i], first, last, tv, ccdName));
+            data.addAll(signalPixelChartSeries((GhostSpecS2N)result.specS2N()[i], first, last, tv, ccdName));
         }
 
         final scala.collection.immutable.List<SpcSeriesData> scalaData = JavaConversions.asScalaBuffer(data).toList();
@@ -562,7 +539,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
     }
 
     /** Creates all data series for the signal in wavelength space chart. */
-    private static List<SpcSeriesData> sigChartSeries(final Gmos mainInstrument, final int ccdIndex, final GmosSpecS2N result, final int start, final int end, final DetectorsTransmissionVisitor tv, final String ccdName) {
+    private static List<SpcSeriesData> sigChartSeries(final Ghost mainInstrument, final int ccdIndex, final GhostSpecS2N result, final int start, final int end, final DetectorsTransmissionVisitor tv, final String ccdName) {
         String sigTitle;
         String bkgTitle;
         Color colorSig;
@@ -626,7 +603,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
     }
 
     /** Creates all data series for the signal to noise in wavelength space chart. */
-    private static List<SpcSeriesData> s2nChartSeries(final Gmos mainInstrument, final int ccdIndex, final GmosSpecS2N result, final int start, final int end, final DetectorsTransmissionVisitor tv, final String ccdName) {
+    private static List<SpcSeriesData> s2nChartSeries(final Ghost mainInstrument, final int ccdIndex, final GhostSpecS2N result, final int start, final int end, final DetectorsTransmissionVisitor tv, final String ccdName) {
         String s2nTitle;
         String finTitle;
         Color colorS2N;
@@ -687,7 +664,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
     }
 
     /** Creates all data series for the signal in pixel space chart. */
-    private static List<SpcSeriesData> signalPixelChartSeries(final GmosSpecS2N result, final int start, final int end, final DetectorsTransmissionVisitor tv, final String ccdName) {
+    private static List<SpcSeriesData> signalPixelChartSeries(final GhostSpecS2N result, final int start, final int end, final DetectorsTransmissionVisitor tv, final String ccdName) {
         // This type of chart is currently only used for IFU-2. It transforms the signal from
         // wavelength space to pixel space and displays it as a chart including gaps between CCDs.
 
@@ -707,7 +684,7 @@ public final class GmosRecipe implements ImagingArrayRecipe, SpectroscopyArrayRe
         final VisitableSampledSpectrum blueBkg = ((VisitableSampledSpectrum) result.getBackgroundSpectrum(0).clone());
 
         // to pixel transform also adds gaps (i.e. sets values to zero..)
-        final double shift = tv.ifu2shift();
+        final double shift = tv.ifu2shift2();
         final double pixelPlotRed[][]     = tv.toPixelSpace(red.getData(start, end), shift);
         final double pixelPlotBlue[][]    = tv.toPixelSpace(blue.getData(start, end), -shift);
         final double pixelPlotRedBkg[][]  = tv.toPixelSpace(redBkg.getData(start, end), shift);

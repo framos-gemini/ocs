@@ -5,7 +5,8 @@ import edu.gemini.spModel.data.YesNoType
 import edu.gemini.spModel.gemini.acqcam.AcqCamParams
 import edu.gemini.spModel.gemini.altair.AltairParams
 import edu.gemini.spModel.gemini.flamingos2.Flamingos2
-import edu.gemini.spModel.gemini.gmos.{GmosSouthType, GmosNorthType, GmosCommonType}
+import edu.gemini.spModel.gemini.ghost.GhostType
+import edu.gemini.spModel.gemini.gmos.{GmosCommonType, GmosNorthType, GmosSouthType}
 import edu.gemini.spModel.gemini.gnirs.GNIRSParams
 import edu.gemini.spModel.gemini.gsaoi.Gsaoi
 import edu.gemini.spModel.gemini.michelle.MichelleParams
@@ -31,8 +32,28 @@ final case class Flamingos2Parameters(
                      customSlitWidth:   Option[Flamingos2.CustomSlitWidth],
                      readMode:          Flamingos2.ReadMode) extends InstrumentDetails
 
-// TODO-GHOSTITC
-final case class GhostParameters() extends InstrumentDetails
+/*// TODO-GHOSTITC
+final case class GhostParameters(
+                centralWavelength: Wavelength,
+                ampGain          : GhostType.AmpGain,
+                readMode         : GhostType.ReadMode,
+                spatialBinning   : Int,
+                spectralBinning  : Int) extends InstrumentDetails
+
+ */
+final case class GhostParameters(
+                                 filter:            GhostType.Filter,
+                                 grating:           GhostType.Disperser,
+                                 centralWavelength: Wavelength,
+                                 fpMask:            GhostType.FPUnit,
+                                 ampGain:           GhostType.AmpGain,
+                                 ampReadMode:       GhostType.AmpReadMode,
+                                 customSlitWidth:   Option[GhostType.CustomSlitWidth],
+                                 spatialBinning:    Int,
+                                 spectralBinning:   Int,
+                                 ccdType:           GhostType.DetectorManufacturer,
+                                 builtinROI:        GhostType.BuiltinROI,
+                                 site:              Site) extends InstrumentDetails
 
 final case class GmosParameters(
                      filter:            GmosCommonType.Filter,
@@ -126,6 +147,7 @@ object InstrumentDetails {
     case i: NifsParameters            => false                                      // NIFS is spectroscopy only
     case i: NiriParameters            => i.grism.equals(Niri.Disperser.NONE)
     case i: TRecsParameters           => i.grating.equals(TReCSParams.Disperser.MIRROR)
+    case i: GhostParameters           => i.grating.equals(GhostType.Disperser.MIRROR)
     case i: GmosParameters            =>
       i.grating.equals(GmosNorthType.DisperserNorth.MIRROR) ||
       i.grating.equals(GmosSouthType.DisperserSouth.MIRROR)

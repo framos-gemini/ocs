@@ -1,0 +1,19 @@
+#parameters for GMOS-N (REL-477: Note that the value for Plate Scale is currently overridden in code)
+
+#name
+GHOST
+#Starting wavelength (nm)
+362
+#Ending wavelength (nm)
+1000
+#Sampling (nm)
+0.25
+#Background filename
+ghost_background.dat
+#Plate Scale 1.64 (arcsec/mm) --> 0.02459 arcsec/pix
+0.02459
+
+#Read Noise
+3.6
+#Dark Current per pixel per second
+0

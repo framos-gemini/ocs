@@ -13,6 +13,7 @@ import edu.gemini.spModel.gemini.flamingos2.Flamingos2
 import edu.gemini.spModel.gemini.gmos.GmosCommonType
 import edu.gemini.spModel.gemini.gmos.GmosCommonType.{AmpGain, AmpReadMode, DetectorManufacturer}
 import edu.gemini.spModel.gemini.gmos.GmosNorthType.{DisperserNorth, FPUnitNorth, FilterNorth}
+import edu.gemini.spModel.gemini.ghost.GhostType
 import edu.gemini.spModel.gemini.gmos.GmosSouthType.{DisperserSouth, FPUnitSouth, FilterSouth}
 import edu.gemini.spModel.gemini.gnirs.GNIRSParams
 import edu.gemini.spModel.gemini.gsaoi.Gsaoi
@@ -166,6 +167,7 @@ object ITCRequest {
   def instrumentParameters(r: ITCRequest): InstrumentDetails = {
     import SPComponentType._
     val i = instrumentName(r)
+    Log.info("FRRRRRRRRRRRRRR instrument " + i)
     if      (i == INSTRUMENT_ACQCAM.readableStr)     acqCamParameters(r)
     else if (i == INSTRUMENT_FLAMINGOS2.readableStr) flamingos2Parameters(r)
     else if (i == INSTRUMENT_GHOST.readableStr)      ghostParameters(r)
@@ -196,7 +198,18 @@ object ITCRequest {
 
   // TODO-GHOSTITC
   def ghostParameters(r: ITCRequest): GhostParameters = {
-    GhostParameters()
+    val site                              = r.enumParameter(classOf[Site])
+    val filter: GhostType.Filter          = r.enumParameter(classOf[GhostType.Filter],    "instrumentFilter")
+    val grating: GhostType.Disperser      = r.enumParameter(classOf[GhostType.Disperser], "instrumentDisperser")
+    val spatBinning                       = r.intParameter("spatBinning")
+    val specBinning                       = r.intParameter("specBinning")
+    val ccdType                           = r.enumParameter(classOf[GhostType.DetectorManufacturer])
+    val centralWl                         = r.centralWavelengthInNanometers()
+    val fpMask: GhostType.FPUnit          = r.enumParameter(classOf[GhostType.FPUnit], "instrumentFPMask")
+    val ampGain                           = r.enumParameter(classOf[GhostType.AmpGain])
+    val ampReadMode                       = r.enumParameter(classOf[GhostType.AmpReadMode])
+    val builtinROI                        = r.enumParameter(classOf[GhostType.BuiltinROI])
+    GhostParameters(filter, grating, centralWl, fpMask, ampGain, ampReadMode, None, spatBinning, specBinning, ccdType, builtinROI, site)
   }
 
   def gmosParameters(r: ITCRequest): GmosParameters = {

@@ -5,6 +5,7 @@ import edu.gemini.spModel.config2.Config;
 import edu.gemini.spModel.config2.DefaultConfig;
 import edu.gemini.spModel.config2.ItemKey;
 import edu.gemini.spModel.core.Site;
+import edu.gemini.spModel.gemini.ghost.GhostType;
 import edu.gemini.spModel.gemini.gmos.GmosCommonType;
 import edu.gemini.spModel.guide.GuideOption;
 import edu.gemini.spModel.guide.GuideProbe;
@@ -148,6 +149,37 @@ public final class ConfigCreator {
     // TODO-GHOSTITC
     public final ConfigCreatorResult createGhostConfig(final GhostParameters ghostParameters, final int numExp) {
         final ConfigCreatorResult result = createCommonConfig(numExp);
+        /*
+        for (final Config step : result.getConfig()) {
+            final GhostType.Binning xbin = GhostType.Binning.getBinningByValue(ghostParameters.spectralBinning());
+            final GhostType.Binning ybin = GhostType.Binning.getBinningByValue(ghostParameters.spatialBinning());
+            step.putItem(CcdXBinning, xbin);
+            step.putItem(CcdYBinning, ybin);
+        }
+        */
+        for (final Config step : result.getConfig()) {
+            step.putItem(InstInstrumentKey, SPComponentType.INSTRUMENT_GHOST);
+
+
+            step.putItem(FPUKey, (ghostParameters.fpMask()));
+            step.putItem(AmpReadModeKey, (ghostParameters.ampReadMode()));
+            step.putItem(DetectorManufacturerKey, (ghostParameters.ccdType()));
+            step.putItem(BuiltinROIKey, (ghostParameters.builtinROI()));
+            step.putItem(DisperserKey, (ghostParameters.grating()));
+
+            final GhostType.Binning xbin = GhostType.Binning.getBinningByValue(ghostParameters.spectralBinning());
+            final GhostType.Binning ybin = GhostType.Binning.getBinningByValue(ghostParameters.spatialBinning());
+            step.putItem(CcdXBinning, xbin);
+            step.putItem(CcdYBinning, ybin);
+            step.putItem(AmpGain, (ghostParameters.ampGain()));
+            if (ghostParameters.ccdType().equals(GhostType.DetectorManufacturer.E2V)) {
+                step.putItem(AmpCount, GhostType.AmpCount.SIX);
+            } else if (ghostParameters.ccdType().equals(GhostType.DetectorManufacturer.HAMAMATSU)) {
+                step.putItem(AmpCount, GhostType.AmpCount.TWELVE);
+            } else {
+                throw new Error("Invalid detector type");
+            }
+        }
         return result;
     }
 
