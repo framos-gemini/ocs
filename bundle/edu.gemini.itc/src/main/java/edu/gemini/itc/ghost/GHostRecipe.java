@@ -64,7 +64,8 @@ public final class GHostRecipe  {
             listPerResElement.add(singleS2N);
             listPerResElement.add(finalS2N);
         }
-
+        // This part creates a single graph to include the blue and red band.
+        // This last graph is the one shown as the final result in the Ghost Web result.
         VisitableSampledSpectrum singleS2NCombPerRes = (VisitableSampledSpectrum) listPerResElement.get(2).clone();
         VisitableSampledSpectrum finalS2NSpecCombPerRes = (VisitableSampledSpectrum) listPerResElement.get(3).clone();
         VisitableSampledSpectrum sigSpectrumComb = (VisitableSampledSpectrum) r[1].specS2N()[0].getSignalSpectrum().clone();

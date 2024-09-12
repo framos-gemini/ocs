@@ -29,13 +29,13 @@ public final class HtmlPrinter {
         final StringBuilder sb = new StringBuilder();
 
         sb.append("Source spatial profile, brightness, and spectral distribution: \n");
-        sb.append("<li>The z = ");
+        sb.append("  The z = ");
         sb.append(String.format("%.5f", sdp.redshift().z()));
         sb.append(" ");
         sb.append(HtmlUtil.sourceProfileString(sdp.profile()));
         sb.append(" is a");
         sb.append(HtmlUtil.sourceDistributionString(sdp));
-        sb.append("</li>");
+        sb.append("\n");
         return sb.toString();
 
     }

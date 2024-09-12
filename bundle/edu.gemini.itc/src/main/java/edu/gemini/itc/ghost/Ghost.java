@@ -135,7 +135,7 @@ public final class Ghost extends Instrument implements BinningProvider, Spectros
         Log.info("TODO. Venu has to confirm the gain for each read Mode");
         switch (gp.readMode()) {
             case SLOW_LOW:
-                return (_ccdColor == Detector.BLUE) ? 0.75 : 0.7;
+                return (_ccdColor == Detector.BLUE) ? 0.75 : 0.7; // e-/DN
             case MEDIUM_LOW:
                 return (_ccdColor == Detector.BLUE) ? 0.63 : 0.57;
             case FAST_LOW:
@@ -183,7 +183,7 @@ public final class Ghost extends Instrument implements BinningProvider, Spectros
     public double getSlitWidth() {
         switch (gp.resolution()) {
             case GhostStandard:
-                return  0.32;
+                return  0.32;  // arcsecs
             case GhostPRV:
             case GhostHigh:
                 return 0.19;
@@ -227,7 +227,7 @@ public final class Ghost extends Instrument implements BinningProvider, Spectros
             case RED: {
                 switch (gp.readMode()) {
                     case SLOW_LOW:
-                        return 4.5;  // e-/DN or ADU
+                        return 4.5;  // e-
                     case MEDIUM_LOW:
                         return 4.5;
                     case FAST_LOW:
@@ -240,7 +240,7 @@ public final class Ghost extends Instrument implements BinningProvider, Spectros
             case BLUE:
                 switch (gp.readMode()) {
                     case SLOW_LOW:
-                        return 4.5;  // e-/DN or ADU
+                        return 4.5;  // e-
                     case MEDIUM_LOW:
                         return 4.5;
                     case FAST_LOW:
