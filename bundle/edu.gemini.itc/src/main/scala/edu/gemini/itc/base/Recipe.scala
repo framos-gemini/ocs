@@ -50,11 +50,7 @@ object Recipe {
   }
 
   def createSignalChart(result: SpectroscopyResult, title: String, index: Int): SpcChartData = {
-    //val data: JList[SpcSeriesData] = new ArrayList[SpcSeriesData]()
-    //data.add(SpcSeriesData(SignalData,     "Signal",           result.specS2N(index).getSignalSpectrum.getData, Some(ITCChart.DarkBlue)))
-    //data.add(SpcSeriesData(BackgroundData, "SQRT(Background)", result.specS2N(index).getBackgroundSpectrum.getData, Some(ITCChart.LightBlue)))
-    //new SpcChartData(SignalChart, title, ChartAxis("Wavelength (nm)"), ChartAxis("e- per exposure per spectral pixel"), data.toList)
-    createSignalChart (result.specS2N(index).getSignalSpectrum, "Signal", result.specS2N(index).getBackgroundSpectrum, "SQRT(Background)",title);
+     createSignalChart (result.specS2N(index).getSignalSpectrum, "Signal", result.specS2N(index).getBackgroundSpectrum, "SQRT(Background)",title);
   }
 
 
@@ -74,21 +70,9 @@ object Recipe {
   def createS2NChart(result: SpectroscopyResult, index: Int): SpcChartData = {
     createS2NChart(result, "Intermediate Single Exp and Final S/N in aperture", index)
   }
-/*
-  def createS2NChart(result: SpectroscopyResult, title: String, index: Int): SpcChartData = {
-    val data: JList[SpcSeriesData] = new ArrayList[SpcSeriesData]
-    data.add(SpcSeriesData(SingleS2NData, "Single Exp S/N", result.specS2N(index).getExpS2NSpectrum.getData))
-    data.add(SpcSeriesData(FinalS2NData,  "Final S/N  ",    result.specS2N(index).getFinalS2NSpectrum.getData))
-    new SpcChartData(S2NChart, title, ChartAxis("Wavelength (nm)"), ChartAxis("Signal / Noise per spectral pixel"), data.toList)
-  } */
 
   def createS2NChart(result: SpectroscopyResult, title: String, index: Int): SpcChartData = {
-    /*val data: JList[SpcSeriesData] = new ArrayList[SpcSeriesData]
-    data.add(SpcSeriesData(SingleS2NData, "Single Exp S/N", result.specS2N(index).getExpS2NSpectrum.getData))
-    data.add(SpcSeriesData(FinalS2NData,  "Final S/N  ",    result.specS2N(index).getFinalS2NSpectrum.getData))
-    new SpcChartData(S2NChart, title, ChartAxis("Wavelength (nm)"), ChartAxis("Signal / Noise per spectral pixel"), data.toList)
-     */
-    return createS2NChart(result.specS2N(index).getExpS2NSpectrum,result.specS2N(index).getFinalS2NSpectrum, "Single Exp S/N", "Final S/N  ", title)
+     return createS2NChart(result.specS2N(index).getExpS2NSpectrum,result.specS2N(index).getFinalS2NSpectrum, "Single Exp S/N", "Final S/N  ", title)
   }
 
   def createS2NChart(expS2NSpectrum: VisitableSampledSpectrum, finalS2NSpectrum: VisitableSampledSpectrum,

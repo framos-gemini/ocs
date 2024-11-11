@@ -148,7 +148,7 @@ public final class Ghost extends Instrument implements BinningProvider, Spectros
 
     public double getPixelSize() {
         // The E2V_PIXEL_SIZE should be in arcsecs/pixel.
-        return Detector.PIXEL_SIZE * gp.binning().getSpectralBinning();  // Both detectors has the same pixel size.
+        return Detector.PIXEL_SIZE * gp.binning().getSpatialBinning();  // Both detectors has the same pixel size.
     }
 
     public double getSpectralPixelWidth() {
@@ -227,7 +227,7 @@ public final class Ghost extends Instrument implements BinningProvider, Spectros
             case RED: {
                 switch (gp.readMode()) {
                     case SLOW_LOW:
-                        return 4.5;  // e-
+                        return 4.5;
                     case MEDIUM_LOW:
                         return 4.5;
                     case FAST_LOW:
@@ -240,7 +240,7 @@ public final class Ghost extends Instrument implements BinningProvider, Spectros
             case BLUE:
                 switch (gp.readMode()) {
                     case SLOW_LOW:
-                        return 4.5;  // e-
+                        return 4.5;
                     case MEDIUM_LOW:
                         return 4.5;
                     case FAST_LOW:
